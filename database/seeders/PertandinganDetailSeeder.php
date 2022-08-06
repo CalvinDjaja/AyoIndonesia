@@ -16,22 +16,22 @@ class PertandinganDetailSeeder extends Seeder
     {
         DB::table('pertandingan_detail')->insert([
             [
-                'rumah_skor_akhir'      => '1',	
-                'tamu_skor_akhir'       => '0',
+                'rumah_skor'      => '1',	
+                'tamu_skor'       => '0',
                 'pemain_pencentak_gol'  => '1',
                 'pertandingan_id'       => '1',
                 'waktu_gol'             => '13:30:00',
             ],
             [
-                'rumah_skor_akhir'      => '1',	
-                'tamu_skor_akhir'       => '1',
+                'rumah_skor'      => '1',	
+                'tamu_skor'       => '1',
                 'pemain_pencentak_gol'  => '3',
                 'pertandingan_id'       => '1',
                 'waktu_gol'             => '13:50:00',
             ],
             [
-                'rumah_skor_akhir'      => '2',	
-                'tamu_skor_akhir'       => '1',
+                'rumah_skor'      => '2',	
+                'tamu_skor'       => '1',
                 'pemain_pencentak_gol'  => '1',
                 'pertandingan_id'       => '1',
                 'waktu_gol'             => '14:10:00',

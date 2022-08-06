@@ -117,6 +117,7 @@ class apicontroller extends Controller
     public function insert_data_pemain(Request $request){
         $request->validate([
             'nama' => 'required|unique:tim_detail',
+            'posisiPemain' => 'required|in:penyerang,gelandang,bertahan,penjaga gawang'
         ]);
         $insert_pemain                 = new PemainModel;
         $insert_pemain->nama           = $request->nama;
@@ -155,7 +156,7 @@ class apicontroller extends Controller
         else{
             return response([
                 'status' => 'Not Found',
-                'message' => 'Tim Tidak Ditemukan',
+                'message' => 'Pemain Tidak Ditemukan',
             ], 404);
         }
     }
@@ -166,14 +167,14 @@ class apicontroller extends Controller
             $data_pemain->delete();
             return response([
                 'status' => 'Ok',
-                'message' => 'Tim Berhasil Dihapus',
+                'message' => 'Pemain Berhasil Dihapus',
                 'data' => $data_pemain
             ], 200);
         }
         else{
             return response([
                 'status' => 'Not Found',
-                'message' => 'Tim Tidak Ditemukan',
+                'message' => 'Pemain Tidak Ditemukan',
             ], 404);
         }
     }
@@ -185,14 +186,14 @@ class apicontroller extends Controller
             $data_pemain = PemainModel::find($id);
             return response([
                 'status' => 'Ok',
-                'message' => 'Tim Berhasil Dikembalikan',
+                'message' => 'Pemain Berhasil Dikembalikan',
                 'data' => $data_pemain
             ], 200);
         }
         else{
             return response([
                 'status' => 'Not Found',
-                'message' => 'Tim Tidak Ditemukan',
+                'message' => 'Pemain Tidak Ditemukan',
             ], 404);
         }
     }
@@ -203,11 +204,12 @@ class apicontroller extends Controller
         return response()->json(PertandinganModel::all(), 200);
     }
     public function insert_data_pertandingan(Request $request){
-        $insert_pertandingan                        = new PertandinganModel;
-        $insert_pertandingan->tanggal_pertandingan  = $request->tanggalPertandingan;
-        $insert_pertandingan->waktu_pertandingan    = $request->waktuPertandingan;
-        $insert_pertandingan->tim_tuan_rumah        = $request->timTuanRumah;
-        $insert_pertandingan->tim_tamu              = $request->timTamu;
+        $insert_pertandingan                                = new PertandinganModel;
+        $insert_pertandingan->tanggal_pertandingan          = $request->tanggalPertandingan;
+        $insert_pertandingan->waktu_pertandingan            = $request->waktuPertandingan;
+        $insert_pertandingan->selesai_waktu_pertandingan    = $request->selesaiWaktuPertandingan;
+        $insert_pertandingan->tim_tuan_rumah                = $request->timTuanRumah;
+        $insert_pertandingan->tim_tamu                      = $request->timTamu;
         $insert_pertandingan->save();
         return response([
             'status' => 'Ok',
@@ -222,8 +224,8 @@ class apicontroller extends Controller
     }
     public function insert_pertandingan_detail(Request $request){
         $insert_pertandingan_detail                         = new PertandinganDetailModel;
-        $insert_pertandingan_detail->rumah_skor_akhir       = $request->rumahSkorAkhir;
-        $insert_pertandingan_detail->tamu_skor_akhir        = $request->tamuSkorAkhir;
+        $insert_pertandingan_detail->rumah_skor             = $request->rumahSkor;
+        $insert_pertandingan_detail->tamu_skor              = $request->tamuSkor;
         $insert_pertandingan_detail->pemain_pencentak_gol   = $request->pemainPencentakGol;
         $insert_pertandingan_detail->waktu_gol              = $request->waktuGol;
         $insert_pertandingan_detail->pertandingan_id        = $request->pertandinganId;
@@ -247,12 +249,12 @@ class apicontroller extends Controller
         if($check_data['tanggal_pertandingan'] < date('Y-m-d') && $check_data['selesai_waktu_pertandingan'] < date("H:i:s") && !$dataDetail){
             $dataDetail = PertandinganDetailModel::where('pertandingan_id', $pertandingan_id)->latest()->first();
             $insert_pertandingan_detail                             = new HasilPertandinganModel;
-            $insert_pertandingan_detail->rumah_skor_akhir           = $dataDetail['rumah_skor_akhir'];
-            $insert_pertandingan_detail->tamu_skor_akhir            = $dataDetail['tamu_skor_akhir'];
-            if($dataDetail['rumah_skor_akhir'] > $dataDetail['tamu_skor_akhir']){
+            $insert_pertandingan_detail->rumah_skor_akhir           = $dataDetail['rumah_skor'];
+            $insert_pertandingan_detail->tamu_skor_akhir            = $dataDetail['tamu_skor'];
+            if($dataDetail['rumah_skor'] > $dataDetail['tamu_skor']){
                 $text = 'Tim Home Menang';
             }
-            elseif ($dataDetail['rumah_skor_akhir'] < $dataDetail['tamu_skor_akhir']) {
+            elseif ($dataDetail['rumah_skor'] < $dataDetail['tamu_skor']) {
                 $text = 'Tim Away Menang';
             }
             else{
@@ -261,13 +263,13 @@ class apicontroller extends Controller
             $insert_pertandingan_detail->status_akhir_pertandingan = $text;
             $count = PertandinganDetailModel::groupBy('pemain_pencentak_gol')->selectRaw('count(*) as total, pemain_pencentak_gol')->first();
             $insert_pertandingan_detail->pemain_pencentak_gol_terbanyak = $count['pemain_pencentak_gol'];
-            $akumulasi_kemenangan_home = round($dataDetail['rumah_skor_akhir']/($dataDetail['rumah_skor_akhir']+$dataDetail['tamu_skor_akhir'])*100);
-            $akumulasi_kemenangan_away = round($dataDetail['tamu_skor_akhir']/($dataDetail['rumah_skor_akhir']+$dataDetail['tamu_skor_akhir'])*100);
+            $insert_pertandingan_detail->pertandingan_id = $pertandingan_id;
+            $akumulasi_kemenangan_home = round($dataDetail['rumah_skor']/($dataDetail['rumah_skor']+$dataDetail['tamu_skor'])*100);
+            $akumulasi_kemenangan_away = round($dataDetail['tamu_skor']/($dataDetail['rumah_skor']+$dataDetail['tamu_skor'])*100);
             $insert_pertandingan_detail->akumulasi_kemenangan_home = $akumulasi_kemenangan_home;
             $insert_pertandingan_detail->akumulasi_kemenangan_away = $akumulasi_kemenangan_away;
             $insert_pertandingan_detail->save();
             return response([
-                'Test' => $dataDetail,
                 'status' => 'Ok',
                 'message' => 'Pertandingan Detail Disimpan',
                 'data' => $insert_pertandingan_detail
